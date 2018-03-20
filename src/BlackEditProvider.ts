@@ -13,53 +13,57 @@ import {
     workspace,
 } from 'vscode';
 
-interface BlackConfig {
-    lineLength: number;
-    fast: boolean;
-    rangeStart: Position;
-    rangeEnd: Position;
-}
-
 export class BlackEditProvider
     implements DocumentRangeFormattingEditProvider, DocumentFormattingEditProvider {
-    provideEdits(document: TextDocument, options: Partial<BlackConfig>): Promise<TextEdit[]> {
+    provideEdits(
+        document: TextDocument,
+        token: CancellationToken,
+        positions?: {
+            start: Position;
+            end: Position;
+        }
+    ): Promise<TextEdit[]> {
+        // calculate input range and pull text selection from document text
         const lastLine = document.lineCount - 1;
-        const start = options.rangeStart || new Position(0, 0);
-        const end =
-            options.rangeEnd || new Position(lastLine, document.lineAt(lastLine).text.length);
-        let range = new Range(start, end);
+        const lastChar = document.lineAt(lastLine).text.length;
+        const start = positions ? positions.start : new Position(0, 0);
+        const end = positions ? positions.end : new Position(lastLine, lastChar);
+        const range = new Range(start, end);
         const input = document.getText().slice(document.offsetAt(start), document.offsetAt(end));
 
         // grab config options
         const lineLength = workspace.getConfiguration().get('black.lineLength');
         const fast = workspace.getConfiguration().get('black.fast');
 
+        // format text
         return new Promise<TextEdit[]>((resolve, reject) => {
             let exitCode: number;
             const cmd = exec(
                 `black -l ${lineLength} --${fast ? 'fast' : 'safe'} -`,
                 (error, stdout, stderr) => {
                     // exit code 1 means something was changed
-                    if (exitCode === 1) {
+                    if (exitCode === 1 && !token.isCancellationRequested) {
                         // strip trailing newline when doing a selection format
-                        resolve([
-                            TextEdit.replace(range, options.rangeEnd ? stdout.trim() : stdout),
-                        ]);
+                        resolve([TextEdit.replace(range, positions ? stdout.trim() : stdout)]);
                     } else {
+                        // no changes, no text replacement
                         resolve([]);
+                        // no change or token cancellation, early exit
+                        if (exitCode === 0 || token.isCancellationRequested) return;
+                        // we have a problem, log the error
+                        console.error(error);
                         // exit code 123 signifies and internal error, most likely unable to parse input
-                        if (exitCode === 123) {
-                            console.error(error);
+                        if (exitCode === 123)
                             window.showErrorMessage(
                                 `Failed to format: unable to parse ${
-                                    options.rangeEnd ? 'selection' : 'document'
+                                    positions ? 'selection' : 'document'
                                 }.`
                             );
-                        } else if (exitCode === 127) {
+                        else if (exitCode === 127)
                             window.showErrorMessage(
                                 'Command "black" not found in PATH. Try `pip install black`.'
                             );
-                        }
+                        else window.showErrorMessage('Failed to format: unknown error.');
                     }
                 }
             ).on('exit', function(code) {
@@ -78,10 +82,7 @@ export class BlackEditProvider
         options: FormattingOptions,
         token: CancellationToken
     ): Promise<TextEdit[]> {
-        return this.provideEdits(document, {
-            rangeStart: range.start,
-            rangeEnd: range.end,
-        });
+        return this.provideEdits(document, token, { start: range.start, end: range.end });
     }
 
     provideDocumentFormattingEdits(
@@ -89,6 +90,6 @@ export class BlackEditProvider
         options: FormattingOptions,
         token: CancellationToken
     ): Promise<TextEdit[]> {
-        return this.provideEdits(document, {});
+        return this.provideEdits(document, token);
     }
 }

@@ -15,6 +15,7 @@ function disposeHandlers() {
 export function activate(context: ExtensionContext) {
     const provider = new BlackEditProvider();
 
+    // bundle formatter registration logic for reuse
     function registerFormatter() {
         disposeHandlers();
         formatterHandler = languages.registerDocumentFormattingEditProvider('python', provider);
@@ -24,8 +25,9 @@ export function activate(context: ExtensionContext) {
         );
     }
 
+    // initial formatter registration
     registerFormatter();
-
+    // dispose, then re-register formatter on workspace root change (for multi-root workspaces)
     context.subscriptions.push(workspace.onDidChangeWorkspaceFolders(registerFormatter), {
         dispose: disposeHandlers,
     });
