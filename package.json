@@ -2,7 +2,7 @@
     "name": "black-vscode",
     "displayName": "Black – Python code formatter",
     "description": "VS Code formatter plugin for ambv/black",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "preview": true,
     "publisher": "joslarson",
     "author": "Joseph Larson <@joslarson>",
