@@ -21,7 +21,7 @@ Also note that Black requires a Python v3.6.0+ environment to run.
 Find this extension VS Code's extension marketplace by searching for "Black - Python code formatter" or install by running the following:
 
 ```
-ext install prettier-vscode
+ext install black-vscode
 ```
 
 
