@@ -1,0 +1,54 @@
+{
+    "name": "black-vscode",
+    "displayName": "Black – Python code formatter",
+    "description": "VS Code formatter plugin for ambv/black",
+    "version": "0.0.1",
+    "preview": true,
+    "publisher": "joslarson",
+    "author": "Joseph Larson <@joslarson>",
+    "license": "BSD-3-Clause",
+    "galleryBanner": {
+        "color": "#262626",
+        "theme": "dark"
+    },
+    "engines": {
+        "vscode": "^1.21.0"
+    },
+    "categories": ["Formatters"],
+    "activationEvents": ["*"],
+    "main": "./out/extension",
+    "contributes": {
+        "configuration": {
+            "type": "object",
+            "title": "Black – Python code formatter configuration",
+            "properties": {
+                "black.lineLength": {
+                    "type": "integer",
+                    "default": 88,
+                    "description": "Sets the desired line length",
+                    "scope": "resource"
+                },
+                "black.fast": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skips temporary sanity checks",
+                    "scope": "resource"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    },
+    "devDependencies": {
+        "typescript": "^2.6.1",
+        "vscode": "^1.1.6",
+        "tslint": "^5.8.0",
+        "@types/node": "^7.0.43",
+        "@types/mocha": "^2.2.42"
+    }
+}
