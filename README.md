@@ -5,9 +5,7 @@ VS Code extension to format Python code using [ambv/black](https://github.com/am
 
 ## Requirements
 
-This extension is a simple wrapper for Black's CLI to enable document and selection formatting from within VS Code, therefor Black must be installed and available in your `PATH` for this extension to work.
-
-Also note that Black requires a Python v3.6.0+ environment to run.
+This extension is a simple wrapper for Black's CLI to enable document and selection formatting from within VS Code, therefor Black must be installed and available in your Python environment for this extension to work. Virtual environments are supported by way of the official Python extension's `python.pythonPath` setting. Be aware that Black requires a Python v3.6.0+ environment to run.
 
 
 ## Installation
