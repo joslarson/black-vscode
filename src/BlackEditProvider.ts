@@ -41,8 +41,9 @@ export class BlackEditProvider
             const cmd = exec(
                 `black -l ${lineLength} --${fast ? 'fast' : 'safe'} -`,
                 (error, stdout, stderr) => {
+                    const isSafe = stdout.trim().length > 0;
                     // exit code 1 means something was changed
-                    if (exitCode === 1 && !token.isCancellationRequested) {
+                    if (isSafe && exitCode === 1 && !token.isCancellationRequested) {
                         // strip trailing newline when doing a selection format
                         resolve([TextEdit.replace(range, positions ? stdout.trim() : stdout)]);
                     } else {
