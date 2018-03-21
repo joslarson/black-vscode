@@ -29,7 +29,10 @@ export class BlackEditProvider
         const start = positions ? positions.start : new Position(0, 0);
         const end = positions ? positions.end : new Position(lastLine, lastChar);
         const range = new Range(start, end);
-        const input = document.getText().slice(document.offsetAt(start), document.offsetAt(end));
+        const input = document
+            .getText()
+            .slice(document.offsetAt(start), document.offsetAt(end))
+            .trim();
 
         // grab config options
         const lineLength = workspace.getConfiguration().get('black.lineLength');
@@ -41,16 +44,28 @@ export class BlackEditProvider
             const cmd = exec(
                 `black -l ${lineLength} --${fast ? 'fast' : 'safe'} -`,
                 (error, stdout, stderr) => {
-                    const isSafe = stdout.trim().length > 0;
-                    // exit code 1 means something was changed
-                    if (isSafe && exitCode === 1 && !token.isCancellationRequested) {
-                        // strip trailing newline when doing a selection format
-                        resolve([TextEdit.replace(range, positions ? stdout.trim() : stdout)]);
+                    const hasInput = input.length > 0;
+                    const hasOutput = stdout.trim().length > 0;
+
+                    // exit code 0 means success with no change, code 1 means success with change
+                    // but we can't trust exit codes by themselves, since we might get code 1 as
+                    // an error if black is not installed. So to be safe, we make sure there is an
+                    // input and an output as well, before saying it's succeeded
+                    const cancelled = token.isCancellationRequested;
+                    const succeeded = hasInput && hasOutput && (exitCode === 0 || exitCode === 1);
+                    const changed = exitCode === 1;
+
+                    if (!cancelled && succeeded && changed) {
+                        // trim trailing newline when doing a selection format that does not
+                        // include the entire last line, otherwise leave the extra newline
+                        const isDocEnd = end.line === lastLine && end.character === lastChar;
+                        const shouldTrim = positions && !isDocEnd;
+                        resolve([TextEdit.replace(range, shouldTrim ? stdout.trim() : stdout)]);
                     } else {
                         // no changes, no text replacement
                         resolve([]);
-                        // no change or token cancellation, early exit
-                        if (exitCode === 0 || token.isCancellationRequested) return;
+                        // cancelled, no input, or success with no change: early exit
+                        if (cancelled || !hasInput || succeeded) return;
                         // we have a problem, log the error
                         console.error(error);
                         // exit code 123 signifies and internal error, most likely unable to parse input
@@ -62,7 +77,7 @@ export class BlackEditProvider
                             );
                         else if (exitCode === 127)
                             window.showErrorMessage(
-                                'Command "black" not found in PATH. Try `pip install black`.'
+                                'Command "black" not found. Try `pip install black`.'
                             );
                         else window.showErrorMessage('Failed to format: unknown error.');
                     }
