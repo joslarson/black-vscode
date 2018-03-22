@@ -2,7 +2,7 @@
     "name": "black-vscode",
     "displayName": "Black – Python code formatter",
     "description": "VS Code formatter plugin for ambv/black",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "publisher": "joslarson",
     "author": "Joseph Larson <@joslarson>",
     "license": "BSD-3-Clause",
@@ -47,6 +47,12 @@
                     "type": "string",
                     "default": "black",
                     "description": "Path to black. You can use a custom version of black by modifying this setting to include the full path.",
+                    "scope": "resource"
+                },
+                "black.debug": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Produces a notification containing the command that was run each time a document or selection is formatted.",
                     "scope": "resource"
                 }
             }

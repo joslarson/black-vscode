@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { exec } from 'child_process';
 
 import {
@@ -9,19 +10,61 @@ import {
     TextDocument,
     TextEdit,
     Position,
+    Uri,
     window,
     workspace,
 } from 'vscode';
 
+export interface BlackConfig {
+    lineLength: number;
+    fast: boolean;
+    blackPath: string;
+    pythonPath: string;
+    rootPath?: string;
+    debug: boolean;
+}
+
+const REL_PATH_REGEX = /^[\.]{1,2}\//;
+
 export class BlackEditProvider
     implements DocumentRangeFormattingEditProvider, DocumentFormattingEditProvider {
+    getConfig(resource: Uri): BlackConfig {
+        const blackConfig = workspace.getConfiguration('black', resource);
+        const pythonConfig = workspace.getConfiguration('python', resource);
+        const workspaceFolder = workspace.getWorkspaceFolder(resource);
+        return {
+            lineLength: blackConfig.get('lineLength') as number,
+            fast: blackConfig.get('fast') as boolean,
+            blackPath: blackConfig.get('path') as string,
+            pythonPath: pythonConfig.get('pythonPath') as string,
+            rootPath: workspaceFolder ? workspaceFolder.uri.path : undefined,
+            debug: blackConfig.get('debug') as boolean,
+        };
+    }
+
+    getCommand({ lineLength, fast, blackPath, pythonPath, rootPath, debug }: BlackConfig): string {
+        // convert relative pythonPath to absolute pythonPath based on current rootPath
+        if (REL_PATH_REGEX.test(pythonPath) && rootPath)
+            pythonPath = path.join(rootPath, pythonPath);
+        // convert relative blackPath to absolute blackPath based on current rootPath
+        if (REL_PATH_REGEX.test(blackPath) && rootPath) blackPath = path.join(rootPath, blackPath);
+        // prefix command with python path from python extension when setting exists
+        const hasCustomPath = blackPath !== 'black';
+        const pythonPrefix =
+            pythonPath && pythonPath !== 'python' && !hasCustomPath ? `${pythonPath} -m ` : '';
+
+        const result = `${pythonPrefix}${blackPath} -l ${lineLength}${fast ? ' --fast' : ''} -`;
+
+        if (debug) window.showInformationMessage(result); // notify command string in debug mode
+
+        return result;
+    }
+
     provideEdits(
         document: TextDocument,
         token: CancellationToken,
-        positions?: {
-            start: Position;
-            end: Position;
-        }
+        command: string,
+        positions?: { start: Position; end: Position }
     ): Promise<TextEdit[]> {
         // calculate input range and pull text selection from document text
         const lastLine = document.lineCount - 1;
@@ -34,23 +77,9 @@ export class BlackEditProvider
             .slice(document.offsetAt(start), document.offsetAt(end))
             .trim();
 
-        // graba config options
-        const blackConfig = workspace.getConfiguration('black', document.uri);
-        const pythonConfig = workspace.getConfiguration('python', document.uri);
-        const pythonPath = pythonConfig.get('pythonPath');
-        const lineLength = blackConfig.get('lineLength');
-        const fast = blackConfig.get('fast');
-        const blackPath = blackConfig.get('path');
-
         // format text
         return new Promise<TextEdit[]>((resolve, reject) => {
             let exitCode: number;
-            // prefix command with python path from python extension when setting exists
-            const hasCustomPath = blackPath !== 'black';
-            const pythonPrefix = pythonPath && !hasCustomPath ? `${pythonPath} -m ` : '';
-            const command = `${pythonPrefix}${blackPath} -l ${lineLength} ${
-                fast ? '--fast' : ''
-            } -`;
             const blackProcess = exec(command, (error, stdout, stderr) => {
                 const hasInput = input.length > 0;
                 const hasOutput = stdout.trim().length > 0;
@@ -109,7 +138,10 @@ export class BlackEditProvider
         options: FormattingOptions,
         token: CancellationToken
     ): Promise<TextEdit[]> {
-        return this.provideEdits(document, token, { start: range.start, end: range.end });
+        return this.provideEdits(document, token, this.getCommand(this.getConfig(document.uri)), {
+            start: range.start,
+            end: range.end,
+        });
     }
 
     provideDocumentFormattingEdits(
@@ -117,6 +149,6 @@ export class BlackEditProvider
         options: FormattingOptions,
         token: CancellationToken
     ): Promise<TextEdit[]> {
-        return this.provideEdits(document, token);
+        return this.provideEdits(document, token, this.getCommand(this.getConfig(document.uri)));
     }
 }

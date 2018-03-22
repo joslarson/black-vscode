@@ -4,6 +4,13 @@ All notable changes to the "black-vscode" extension will be documented in this f
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2018-03-22
+### Added
+- Adds support for relative `python.pythonPath` and `black.path` settings
+
+### Improved
+- Better test coverage, specifically relating to how the command is generated
+
 ## [1.2.0] - 2018-03-22
 ### Added
 - Adds optional `black.path` setting to set absolute path to custom black version
