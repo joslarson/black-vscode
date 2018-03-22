@@ -23,4 +23,4 @@ This extension contributes the following settings to configure Black's behavior:
 
 * `black.lineLength`: Sets the desired line length.
 * `black.fast`: Skips temporary sanity checks.
-* `black.path`: Path to black. You can use a custom version of black by modifying this setting to include the full path.
+* `black.path` (optional): Custom path to black. If you want to use the same instance of black for all your workspaces (like for projects using < Python 3.6.0), modify this setting to include the full path.

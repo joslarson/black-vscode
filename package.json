@@ -46,7 +46,7 @@
                 "black.path": {
                     "type": "string",
                     "default": "black",
-                    "description": "Path to black. You can use a custom version of black by modifying this setting to include the full path.",
+                    "description": "Custom path to black. If you want to use the same instance of black for all your workspaces (like for projects using < Python 3.6.0), modify this setting to include the full path.",
                     "scope": "resource"
                 },
                 "black.debug": {
