@@ -21,5 +21,6 @@ This extension is a simple wrapper for Black's CLI to enable document and select
 
 This extension contributes the following settings to configure Black's behavior:
 
-* `black.lineLength`: sets the desired line length
-* `black.fast`: skips temporary sanity checks
+* `black.lineLength`: Sets the desired line length.
+* `black.fast`: Skips temporary sanity checks.
+* `black.path`: Path to black. You can use a custom version of black by modifying this setting to include the full path.

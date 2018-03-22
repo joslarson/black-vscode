@@ -6,13 +6,18 @@ import { commands, window, workspace } from 'vscode';
 
 suite('Extension Tests', function() {
     test('extension settings are registered', function() {
-        assert(Number.isInteger(workspace.getConfiguration().get('black.lineLength') as number));
-        assert(typeof workspace.getConfiguration().get('black.fast') === 'boolean');
+        const config = workspace.getConfiguration('black', null);
+        assert(Number.isInteger(config.get('lineLength') as number));
+        assert(typeof config.get('fast') === 'boolean');
+        assert(typeof config.get('path') === 'string');
     });
 
     test('successfully formats documents', async function() {
         this.timeout(10000);
-        const fileString = fs.readFileSync(path.join('src', 'test', 'unformatted_test.py'), 'utf8');
+        const fileString = fs.readFileSync(
+            path.join(__dirname, '..', '..', 'src', 'test', 'unformatted_test.py'),
+            'utf8'
+        );
         const doc = await workspace.openTextDocument({ language: 'python', content: fileString });
         const unformatted = doc.getText();
         const preLength = doc.lineCount;

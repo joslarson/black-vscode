@@ -34,17 +34,23 @@ export class BlackEditProvider
             .slice(document.offsetAt(start), document.offsetAt(end))
             .trim();
 
-        // grab config options
-        const pythonPath = workspace.getConfiguration().get('python.pythonPath');
-        const lineLength = workspace.getConfiguration().get('black.lineLength');
-        const fast = workspace.getConfiguration().get('black.fast');
+        // graba config options
+        const blackConfig = workspace.getConfiguration('black', document.uri);
+        const pythonConfig = workspace.getConfiguration('python', document.uri);
+        const pythonPath = pythonConfig.get('pythonPath');
+        const lineLength = blackConfig.get('lineLength');
+        const fast = blackConfig.get('fast');
+        const blackPath = blackConfig.get('path');
 
         // format text
         return new Promise<TextEdit[]>((resolve, reject) => {
             let exitCode: number;
             // prefix command with python path from python extension when setting exists
-            const pathPrefix = pythonPath ? `${pythonPath} -m ` : '';
-            const command = `${pathPrefix}black -l ${lineLength} --${fast ? 'fast' : 'safe'} -`;
+            const hasCustomPath = blackPath !== 'black';
+            const pythonPrefix = pythonPath && !hasCustomPath ? `${pythonPath} -m ` : '';
+            const command = `${pythonPrefix}${blackPath} -l ${lineLength} ${
+                fast ? '--fast' : ''
+            } -`;
             const blackProcess = exec(command, (error, stdout, stderr) => {
                 const hasInput = input.length > 0;
                 const hasOutput = stdout.trim().length > 0;
