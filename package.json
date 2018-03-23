@@ -52,7 +52,7 @@
                 "black.debug": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Produces a notification containing the command that was run each time a document or selection is formatted.",
+                    "description": "Set to true to enable extension debugging output.",
                     "scope": "resource"
                 }
             }

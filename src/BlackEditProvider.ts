@@ -13,6 +13,7 @@ import {
     Uri,
     window,
     workspace,
+    OutputChannel,
 } from 'vscode';
 
 export interface BlackConfig {
@@ -28,10 +29,22 @@ const REL_PATH_REGEX = /^[\.]{1,2}\//;
 
 export class BlackEditProvider
     implements DocumentRangeFormattingEditProvider, DocumentFormattingEditProvider {
-    getConfig(resource: Uri): BlackConfig {
+    channel?: OutputChannel;
+
+    debug(msg: string, newLine = true) {
+        const debug: boolean = workspace.getConfiguration('black', null).get('debug') as boolean;
+        if (debug) {
+            if (this.channel === undefined)
+                this.channel = window.createOutputChannel('Black – Python code formatter');
+            newLine ? this.channel.appendLine(msg) : this.channel.append(msg);
+            this.channel.show();
+        }
+    }
+
+    getConfig(resource: Uri | null): BlackConfig {
         const blackConfig = workspace.getConfiguration('black', resource);
         const pythonConfig = workspace.getConfiguration('python', resource);
-        const workspaceFolder = workspace.getWorkspaceFolder(resource);
+        const workspaceFolder = resource && workspace.getWorkspaceFolder(resource);
         return {
             lineLength: blackConfig.get('lineLength') as number,
             fast: blackConfig.get('fast') as boolean,
@@ -53,11 +66,7 @@ export class BlackEditProvider
         const pythonPrefix =
             pythonPath && pythonPath !== 'python' && !hasCustomPath ? `${pythonPath} -m ` : '';
 
-        const result = `${pythonPrefix}${blackPath} -l ${lineLength}${fast ? ' --fast' : ''} -`;
-
-        if (debug) window.showInformationMessage(result); // notify command string in debug mode
-
-        return result;
+        return `${pythonPrefix}${blackPath} -l ${lineLength}${fast ? ' --fast' : ''} -`;
     }
 
     provideEdits(
@@ -81,6 +90,7 @@ export class BlackEditProvider
         return new Promise<TextEdit[]>((resolve, reject) => {
             let exitCode: number;
             const blackProcess = exec(command, (error, stdout, stderr) => {
+                this.debug(''); // start with new line
                 const hasInput = input.length > 0;
                 const hasOutput = stdout.trim().length > 0;
 
@@ -91,6 +101,7 @@ export class BlackEditProvider
                 const cancelled = token.isCancellationRequested;
                 const succeeded = hasInput && hasOutput && (exitCode === 0 || exitCode === 1);
                 const changed = exitCode === 1;
+                let hasErrors = false;
 
                 if (!cancelled && succeeded && changed) {
                     // trim trailing newline when doing a selection format that does not
@@ -98,30 +109,43 @@ export class BlackEditProvider
                     const isDocEnd = end.line === lastLine && end.character === lastChar;
                     const shouldTrim = positions && !isDocEnd;
                     resolve([TextEdit.replace(range, shouldTrim ? stdout.trim() : stdout)]);
+                    this.debug('Formatting applied successfully.');
                 } else {
-                    // no changes, no text replacement
-                    resolve([]);
-                    // cancelled, no input, or success with no change: early exit
-                    if (cancelled || !hasInput || succeeded) return;
+                    resolve([]); // no changes, no text replacement
+                    const moduleNotFound = error.message.indexOf('No module named black') > -1;
+                    hasErrors = (!cancelled && hasInput && !succeeded) || moduleNotFound;
 
-                    // convert exit code 1 from python -m to 127 when black not installed
-                    if (error.message.indexOf('No module named black') > -1) exitCode = 127;
-
-                    // we have a problem, log the error
-                    console.error(`exitCode: ${exitCode}\n`, error);
-                    // exit code 123 signifies and internal error, most likely unable to parse input
-                    if (exitCode === 123)
+                    // output status message
+                    if (cancelled && !succeeded && hasInput) {
+                        this.debug('Formatting action cancelled.');
+                    } else if (succeeded) {
+                        this.debug('Nothing to format: input already formatted correctly.');
+                    } else if (!hasInput) {
+                        this.debug('Nothing to format: empty input received.');
+                    } else if (exitCode === 123) {
+                        // exit code 123 signifies and internal error, most likely unable to parse input
+                        this.debug('Failed to format: unable to parse input.');
                         window.showErrorMessage(
                             `Failed to format: unable to parse ${
                                 positions ? 'selection' : 'document'
                             }.`
                         );
-                    else if (exitCode === 127)
+                    } else if (exitCode === 127 || moduleNotFound) {
+                        this.debug('Failed to format: "black" command not found.');
                         window.showErrorMessage(
-                            'Command "black" not found. Try `pip install black`.'
+                            'Command "black" not found. Try "pip install black".'
                         );
-                    else window.showErrorMessage('Failed to format: unknown error.');
+                    } else {
+                        this.debug('Failed to format: unhandled error.');
+                        window.showErrorMessage(
+                            'Failed to format: unhandled error. Set "black.debug" to true to enable debugging output.'
+                        );
+                    }
                 }
+                // log the command that was run
+                this.debug(`Command "${command}" resulted in an exit code of ${exitCode}.`);
+                // log error if any
+                if (hasErrors) this.debug(`${error}`.trim());
             }).on('exit', function(code) {
                 // capture the exit code for use above
                 exitCode = code;
@@ -138,7 +162,8 @@ export class BlackEditProvider
         options: FormattingOptions,
         token: CancellationToken
     ): Promise<TextEdit[]> {
-        return this.provideEdits(document, token, this.getCommand(this.getConfig(document.uri)), {
+        const config = this.getConfig(document.uri);
+        return this.provideEdits(document, token, this.getCommand(config), {
             start: range.start,
             end: range.end,
         });
@@ -149,6 +174,7 @@ export class BlackEditProvider
         options: FormattingOptions,
         token: CancellationToken
     ): Promise<TextEdit[]> {
-        return this.provideEdits(document, token, this.getCommand(this.getConfig(document.uri)));
+        const config = this.getConfig(document.uri);
+        return this.provideEdits(document, token, this.getCommand(config));
     }
 }
