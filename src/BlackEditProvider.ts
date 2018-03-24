@@ -59,8 +59,12 @@ export class BlackEditProvider
     getCommand({ lineLength, fast, blackPath, pythonPath, rootPath, debug }: BlackConfig): string {
         // replace ${workspaceRoot} var in paths with rootPath
         if (rootPath) {
+            blackPath = replaceVarInPath(blackPath, '${workspaceFolder}', rootPath);
             blackPath = replaceVarInPath(blackPath, '${workspaceRoot}', rootPath);
-            if (pythonPath) pythonPath = replaceVarInPath(pythonPath, '${workspaceRoot}', rootPath);
+            if (pythonPath) {
+                pythonPath = replaceVarInPath(pythonPath, '${workspaceFolder}', rootPath);
+                pythonPath = replaceVarInPath(pythonPath, '${workspaceRoot}', rootPath);
+            }
         }
         // convert relative pythonPath to absolute pythonPath based on current rootPath
         if (pythonPath && REL_PATH_REGEX.test(pythonPath) && rootPath)
