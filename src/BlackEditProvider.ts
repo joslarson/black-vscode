@@ -15,12 +15,13 @@ import {
     workspace,
     OutputChannel,
 } from 'vscode';
+import { replaceVarInPath } from './utils';
 
 export interface BlackConfig {
     lineLength: number;
     fast: boolean;
     blackPath: string;
-    pythonPath: string;
+    pythonPath?: string;
     rootPath?: string;
     debug: boolean;
 }
@@ -49,15 +50,20 @@ export class BlackEditProvider
             lineLength: blackConfig.get('lineLength') as number,
             fast: blackConfig.get('fast') as boolean,
             blackPath: blackConfig.get('path') as string,
-            pythonPath: pythonConfig.get('pythonPath') as string,
-            rootPath: workspaceFolder ? workspaceFolder.uri.path : undefined,
+            pythonPath: pythonConfig.get('pythonPath') as string | undefined,
+            rootPath: workspaceFolder ? (workspaceFolder.uri.path as string) : undefined,
             debug: blackConfig.get('debug') as boolean,
         };
     }
 
     getCommand({ lineLength, fast, blackPath, pythonPath, rootPath, debug }: BlackConfig): string {
+        // replace ${workspaceRoot} var in paths with rootPath
+        if (rootPath) {
+            blackPath = replaceVarInPath(blackPath, '${workspaceRoot}', rootPath);
+            if (pythonPath) pythonPath = replaceVarInPath(pythonPath, '${workspaceRoot}', rootPath);
+        }
         // convert relative pythonPath to absolute pythonPath based on current rootPath
-        if (REL_PATH_REGEX.test(pythonPath) && rootPath)
+        if (pythonPath && REL_PATH_REGEX.test(pythonPath) && rootPath)
             pythonPath = path.join(rootPath, pythonPath);
         // convert relative blackPath to absolute blackPath based on current rootPath
         if (REL_PATH_REGEX.test(blackPath) && rootPath) blackPath = path.join(rootPath, blackPath);

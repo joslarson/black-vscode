@@ -48,8 +48,10 @@ suite('Extension Tests', function() {
         const pythonPath = '/abs/path/to/python';
         const relPythonPath1 = './rel/path/to/python';
         const relPythonPath2 = '../rel/path/to/python';
+        const varPythonPath = '${workspaceRoot}/var/path/to/python';
         const blackPath = '/abs/path/to/black';
         const relBlackPath = './rel/path/to/black';
+        const varBlackPath = '${workspaceRoot}/var/path/to/black';
 
         // line length, no custom paths
         assert(blackEditProvider.getCommand(config) === 'black -l 88 -');
@@ -76,6 +78,11 @@ suite('Extension Tests', function() {
                 pythonPath: relPythonPath2,
             }) === '/root/rel/path/to/python -m black -l 88 -'
         );
+        // ${workspaceRoot} var in pythonPath
+        assert(
+            blackEditProvider.getCommand({ ...config, pythonPath: varPythonPath, rootPath }) ===
+                '/root/path/var/path/to/python -m black -l 88 -'
+        );
         // absolute black path
         assert(blackEditProvider.getCommand({ ...config, blackPath }) === `${blackPath} -l 88 -`);
         // relative black path
@@ -90,6 +97,11 @@ suite('Extension Tests', function() {
         assert(
             blackEditProvider.getCommand({ ...config, rootPath, pythonPath, blackPath }) ===
                 `${blackPath} -l 88 -`
+        );
+        // ${workspaceRoot} var in blackPath
+        assert(
+            blackEditProvider.getCommand({ ...config, blackPath: varBlackPath, rootPath }) ===
+                '/root/path/var/path/to/black -l 88 -'
         );
     });
 });
