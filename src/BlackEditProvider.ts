@@ -45,7 +45,9 @@ export class BlackEditProvider
     getConfig(resource: Uri | null): BlackConfig {
         const blackConfig = workspace.getConfiguration('black', resource);
         const pythonConfig = workspace.getConfiguration('python', resource);
-        const workspaceFolder = resource && workspace.getWorkspaceFolder(resource);
+        const workspaceFolder = resource
+            ? workspace.getWorkspaceFolder(resource)
+            : workspace.workspaceFolders && workspace.workspaceFolders[0];
         return {
             lineLength: blackConfig.get('lineLength') as number,
             fast: blackConfig.get('fast') as boolean,
@@ -109,11 +111,10 @@ export class BlackEditProvider
                 // an error if black is not installed. So to be safe, we make sure there is an
                 // input and an output as well, before saying it's succeeded
                 const cancelled = token.isCancellationRequested;
-                const succeeded = hasInput && hasOutput && (exitCode === 0 || exitCode === 1);
-                const changed = exitCode === 1;
+                const succeeded = hasInput && hasOutput && exitCode === 0;
                 let hasErrors = false;
 
-                if (!cancelled && succeeded && changed) {
+                if (!cancelled && succeeded) {
                     // trim trailing newline when doing a selection format that does not
                     // include the entire last line, otherwise leave the extra newline
                     const isDocEnd = end.line === lastLine && end.character === lastChar;
@@ -122,14 +123,16 @@ export class BlackEditProvider
                     this.debug('Formatting applied successfully.');
                 } else {
                     resolve([]); // no changes, no text replacement
-                    const moduleNotFound = error.message.indexOf('No module named black') > -1;
+                    console.log('failed to format');
+                    const moduleNotFound =
+                        error && error.message
+                            ? error.message.indexOf('No module named black') > -1
+                            : false;
+                    console.log('after error');
                     hasErrors = (!cancelled && hasInput && !succeeded) || moduleNotFound;
-
                     // output status message
-                    if (cancelled && !succeeded && hasInput) {
+                    if (cancelled) {
                         this.debug('Formatting action cancelled.');
-                    } else if (succeeded) {
-                        this.debug('Nothing to format: input already formatted correctly.');
                     } else if (!hasInput) {
                         this.debug('Nothing to format: empty input received.');
                     } else if (exitCode === 123) {

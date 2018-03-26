@@ -1,0 +1,10 @@
+{
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true,
+    "python.formatting.provider": "none",
+    "black.lineLength": 79,
+    "black.debug": true,
+    // "black.path": "black",
+    "python.pythonPath": "${workspaceFolder}/.venv/bin/python",
+}

@@ -11,10 +11,12 @@ Find this extension in VS Code's extension marketplace by searching for [Black -
 code --install-extension joslarson.black-vscode
 ```
 
+> **Note:** If you're using Microsoft's official Python extension, you'll likely want to to set `python.formatting.provider` to "none" so that this extension can handle the formatting of Python files exclusively.
+
 
 ## Requirements
 
-This extension is a simple wrapper for Black's CLI to enable document and selection formatting from within VS Code, therefor Black must be installed and available in your Python environment for this extension to work. Virtual environments are supported by way of the official Python extension's `python.pythonPath` setting. Be aware that Black requires a Python v3.6.0+ environment to run.
+This extension does not install Black for you. For it to work Black must be installed and either (1) be available in your activated Python environment or (2) have the `black.path` explicitly set. Virtual environments are supported by way of the official Python extension's `python.pythonPath` setting. Also be aware that Black requires a Python v3.6.0+ environment to run, so if you want to use it to format code in < Python 3.6.0 environments, you'll have to set the `black.path` to point to a 3.6.0+ environments black instance directly.
 
 
 ## Extension Settings
@@ -23,4 +25,5 @@ This extension contributes the following settings to configure Black's behavior:
 
 * `black.lineLength`: Sets the desired line length.
 * `black.fast`: Skips temporary sanity checks.
-* `black.path` (optional): Custom path to black. If you want to use the same instance of black for all your workspaces (like for projects using < Python 3.6.0), modify this setting to include the full path.
+* `black.path`: Custom path to black. If you want to use the same instance of black for all your workspaces (like for projects using < Python 3.6.0), modify this setting to include the full path.
+* `black.debug`: Set to true to enable extension debugging output.

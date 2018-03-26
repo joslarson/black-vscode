@@ -4,6 +4,10 @@ All notable changes to the "black-vscode" extension will be documented in this f
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2018-03-26
+### Added
+- Backwards incompatible changes to support black v18.3a4
+
 ## [1.3.1] - 2018-03-24
 ### Improved
 - Adds missing support for "${workspaceFolder}" expansion in `python.pythonPath` and `black.path`.

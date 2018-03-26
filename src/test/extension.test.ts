@@ -18,7 +18,7 @@ suite('Extension Tests', function() {
     test('successfully formats documents', async function() {
         this.timeout(10000);
         const fileString = fs.readFileSync(
-            path.join(__dirname, '..', '..', 'src', 'test', 'unformatted_test.py'),
+            path.join(__dirname, '..', '..', 'src', 'test', 'test-project', 'test.py'),
             'utf8'
         );
         const doc = await workspace.openTextDocument({ language: 'python', content: fileString });
