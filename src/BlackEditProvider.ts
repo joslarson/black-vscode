@@ -15,7 +15,7 @@ import {
     workspace,
     OutputChannel,
 } from 'vscode';
-import { replaceVarInPath } from './utils';
+import { replaceVarInPath, blackVersionIsIncompatible } from './utils';
 
 export interface BlackConfig {
     lineLength: number;
@@ -31,6 +31,7 @@ const REL_PATH_REGEX = /^[\.]{1,2}\//;
 export class BlackEditProvider
     implements DocumentRangeFormattingEditProvider, DocumentFormattingEditProvider {
     channel?: OutputChannel;
+    hasCompatibleBlackVersion?: boolean;
 
     debug(msg: string, newLine = true) {
         const debug: boolean = workspace.getConfiguration('black', null).get('debug') as boolean;
@@ -81,12 +82,26 @@ export class BlackEditProvider
         return `${pythonPrefix}${blackPath} -l ${lineLength}${fast ? ' --fast' : ''} -`;
     }
 
-    provideEdits(
+    async provideEdits(
         document: TextDocument,
         token: CancellationToken,
         command: string,
         positions?: { start: Position; end: Position }
     ): Promise<TextEdit[]> {
+        this.debug(''); // start with new line
+
+        // handle incompatible black version
+        if (!this.hasCompatibleBlackVersion) {
+            const versionErrorMessage = await blackVersionIsIncompatible(this);
+            if (versionErrorMessage) {
+                window.showErrorMessage(versionErrorMessage);
+                this.debug(versionErrorMessage);
+                return [];
+            } else {
+                this.hasCompatibleBlackVersion = true;
+            }
+        }
+
         // calculate input range and pull text selection from document text
         const lastLine = document.lineCount - 1;
         const lastChar = document.lineAt(lastLine).text.length;
@@ -99,10 +114,9 @@ export class BlackEditProvider
             .trim();
 
         // format text
-        return new Promise<TextEdit[]>((resolve, reject) => {
+        const edits = await new Promise<TextEdit[]>((resolve, reject) => {
             let exitCode: number;
             const blackProcess = exec(command, (error, stdout, stderr) => {
-                this.debug(''); // start with new line
                 const hasInput = input.length > 0;
                 const hasOutput = stdout.trim().length > 0;
 
@@ -167,6 +181,8 @@ export class BlackEditProvider
             blackProcess.stdin.write(input);
             blackProcess.stdin.end();
         });
+
+        return edits;
     }
 
     provideDocumentRangeFormattingEdits(

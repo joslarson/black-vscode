@@ -5,6 +5,7 @@ import * as assert from 'assert';
 import { commands, window, workspace } from 'vscode';
 
 import { BlackEditProvider, BlackConfig } from '../BlackEditProvider';
+import { Version } from '../utils';
 
 suite('Extension Tests', function() {
     test('extension settings are registered', function() {
@@ -115,5 +116,22 @@ suite('Extension Tests', function() {
             blackEditProvider.getCommand({ ...config, blackPath: varBlackPath2, rootPath }) ===
                 '/root/path/var/path/to/black -l 88 -'
         );
+    });
+
+    test('version comparison works correctly', () => {
+        // test expected success
+        const v1 = new Version('18.3a999');
+        const v2 = new Version('18.3b999');
+        const v3 = new Version('18.3c999');
+        const v4 = new Version('18.3.999');
+        assert(v1 < v2);
+        assert(v2 < v3);
+        assert(v3 < v4);
+        // test numeric value limit: nos support for micro > 999
+        const v5 = new Version('18.3b0');
+        const v6 = new Version('18.3a1000');
+        const v7 = new Version('18.3a999');
+        assert(Number(v5) === Number(v6));
+        assert(v5 > v7);
     });
 });
