@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 
 import * as path from 'path';
 import { BlackEditProvider } from './BlackEditProvider';
+
 const minBlackVersion: string = require('../package.json').minBlackVersion;
 
 export function replaceVarInPath(pathTemplate: string, searchValue: string, replaceValue: string) {
@@ -65,8 +66,8 @@ export function blackVersionIsIncompatible(provider: BlackEditProvider) {
                 } catch {
                     // pass
                 }
-                resolve();
             }
+            resolve();
         }).on('exit', code => {
             exitCode = code;
         });

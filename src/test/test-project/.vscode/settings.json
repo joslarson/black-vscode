@@ -1,10 +1,11 @@
 {
-    "python.linting.pylintEnabled": false,
-    "python.linting.flake8Enabled": true,
-    "python.linting.enabled": true,
-    "python.formatting.provider": "none",
-    "black.lineLength": 79,
-    "black.debug": true,
-    // "black.path": "black",
-    "python.pythonPath": "${workspaceFolder}/.venv/bin/python",
+    "python.pythonPath": "${workspaceFolder}/.venv/bin/python"
+    // "python.linting.pylintEnabled": false,
+    // "python.linting.flake8Enabled": true,
+    // "python.linting.enabled": true,
+    // "python.formatting.provider": "none",
+    // "black.lineLength": 79,
+    // "black.debug": true,
+    // "black.path": "/Users/brojoe/.pyenv/versions/3.6.3/bin/black",
+    // "python.pythonPath": "${workspaceFolder}/.venv/bin/python",
 }

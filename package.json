@@ -2,7 +2,7 @@
     "name": "black-vscode",
     "displayName": "Black – Python code formatter",
     "description": "VS Code formatter plugin for ambv/black",
-    "version": "2.0.2",
+    "version": "2.0.3",
     "minBlackVersion": "18.3a4",
     "publisher": "joslarson",
     "author": "Joseph Larson <@joslarson>",
@@ -17,7 +17,7 @@
         "url": "https://github.com/joslarson/black-vscode.git"
     },
     "engines": {
-        "vscode": "^1.21.0"
+        "vscode": "^1.23.0"
     },
     "categories": [
         "Formatters"
@@ -67,10 +67,10 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.6",
-        "tslint": "^5.8.0",
-        "@types/node": "^7.0.43",
-        "@types/mocha": "^2.2.42"
+        "typescript": "^2.8.3",
+        "vscode": "^1.1.17",
+        "tslint": "^5.10.0",
+        "@types/node": "^10.0.3",
+        "@types/mocha": "^5.2.0"
     }
 }

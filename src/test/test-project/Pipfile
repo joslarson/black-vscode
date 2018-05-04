@@ -8,7 +8,7 @@ name = "pypi"
 [packages]
 
 "flake8" = "*"
-black = "==18.3a3"
+black = "==18.4a4"
 
 
 [dev-packages]
