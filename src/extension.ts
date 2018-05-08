@@ -1,3 +1,4 @@
+import { exec } from 'child_process';
 import { Disposable, ExtensionContext, languages, workspace, window } from 'vscode';
 import { BlackEditProvider } from './BlackEditProvider';
 import { blackVersionIsIncompatible } from './utils';
@@ -18,6 +19,7 @@ async function registerFormatter(provider: BlackEditProvider) {
     disposeHandlers();
     languages.registerDocumentFormattingEditProvider('python', provider);
     languages.registerDocumentRangeFormattingEditProvider('python', provider);
+
     // check black version compatibility
     const versionErrorMessage = await blackVersionIsIncompatible(provider);
     if (versionErrorMessage) {
@@ -27,8 +29,30 @@ async function registerFormatter(provider: BlackEditProvider) {
     }
 }
 
-export function activate(context: ExtensionContext) {
-    const provider = new BlackEditProvider();
+export async function activate(context: ExtensionContext) {
+    const providerArgs: string[] = [];
+
+    // workaround for vscode issue: https://github.com/Microsoft/vscode/issues/16261
+    if (process.platform === 'darwin' && !process.env.LANG) {
+        await new Promise((resolve, reject) =>
+            exec(
+                `echo $(defaults read -g AppleLanguages | sed '/"/!d;s/["[:space:]]//g;s/-/_/').UTF-8`,
+                (error, stdout, stderr) => {
+                    // if there's an unexpected error, skip this
+                    if (!error) {
+                        const langCode = stdout.trim();
+                        // make sure stdout matches a valid language code pattern
+                        if (langCode.match(/^[a-z]{2}_[A-Z]{2}\.UTF-8$/)) {
+                            providerArgs.push(`LANG=${langCode} `);
+                        }
+                    }
+                    resolve();
+                }
+            )
+        );
+    }
+
+    const provider = new BlackEditProvider(...providerArgs);
 
     // initial formatter registration
     registerFormatter(provider);

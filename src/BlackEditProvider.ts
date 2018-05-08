@@ -32,6 +32,11 @@ export class BlackEditProvider
     implements DocumentRangeFormattingEditProvider, DocumentFormattingEditProvider {
     channel?: OutputChannel;
     hasCompatibleBlackVersion?: boolean;
+    commandPrefix: string;
+
+    constructor(commandPrefix = '') {
+        this.commandPrefix = commandPrefix;
+    }
 
     debug(msg: string, newLine = true) {
         const debug: boolean = workspace.getConfiguration('black', null).get('debug') as boolean;
@@ -79,7 +84,9 @@ export class BlackEditProvider
         const pythonPrefix =
             pythonPath && pythonPath !== 'python' && !hasCustomPath ? `${pythonPath} -m ` : '';
 
-        return `${pythonPrefix}${blackPath} -l ${lineLength}${fast ? ' --fast' : ''} -`;
+        return `${this.commandPrefix}${pythonPrefix}${blackPath} -l ${lineLength}${
+            fast ? ' --fast' : ''
+        } -`;
     }
 
     async provideEdits(
