@@ -13,8 +13,9 @@ code --install-extension joslarson.black-vscode
 
 > **Note:** If you're using Microsoft's official Python extension, you'll likely want to to set `python.formatting.provider` to `"none"` so that this extension can handle the formatting of Python files exclusively.
 
-> **NOTE:** Execute this extension using `cmd/ctrl` + `shift` + `p` and searching for `Format Document` or `Format Selection`. To execute the extension on save, set `editor.formatOnSave` to `true`. 
+## Formatting in Visual Studio Code
 
+Execute this extension using `cmd/ctrl` + `shift` + `p` and searching for “Format Document” or “Format Selection”. To execute the extension on save, set `editor.formatOnSave` to `true`.
 
 ## Requirements
 
