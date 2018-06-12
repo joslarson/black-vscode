@@ -1,3 +1,9 @@
+# DEPRECATED
+
+Use Microsoft's official [Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) instead. This extension was created as a stop-gap until Black support inevitably landed there. That day [has come](https://marketplace.visualstudio.com/items/ms-python.python/changelog#user-content-2018.5.0-(05-jun-2018)) :)
+
+---
+
 # Black – Python code formatter for VS Code
 
 VS Code extension to format Python code using [ambv/black](https://github.com/ambv/black).

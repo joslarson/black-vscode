@@ -1,8 +1,8 @@
 {
     "name": "black-vscode",
-    "displayName": "Black – Python code formatter",
+    "displayName": "DEPRECATED: Black – Python code formatter",
     "description": "VS Code formatter plugin for ambv/black",
-    "version": "2.0.5",
+    "version": "2.0.6",
     "minBlackVersion": "18.3a4",
     "publisher": "joslarson",
     "author": "Joseph Larson <@joslarson>",
